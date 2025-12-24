@@ -1,33 +1,42 @@
-# 🛡️ SysOps Project #2 — SSH Key Authentication & Hardening
+# 🛡️ SysOps Project #2 — SSH Hardening & Secure Access (Ubuntu + Windows)
 
 ## 📌 Project Overview
-This project focuses on securing SSH access to a Linux server by replacing password-based authentication with SSH key-based authentication and applying basic SSH hardening techniques.
+This project demonstrates how to securely harden SSH access on a Linux server by:
 
-The goal is to simulate real-world SysOps security practices used to protect production servers from unauthorized access and brute-force attacks.
+- Moving SSH off the default port
+- Disabling root login
+- Restricting SSH access to specific users
+- Understanding and resolving modern Ubuntu systemd socket activation behavior
+- Verifying access from a Windows client
+
+The project simulates a real SysOps hardening task commonly required in production environments.
 
 ---
 
 ## 🎯 Objectives
-- Enforce SSH key-based authentication
-- Disable password-based SSH login
-- Disable root login over SSH
-- Apply baseline server hardening
-- Document rollback and recovery steps
+- Harden SSH access following best practices
+- Change SSH listening port to 2222
+- Prevent direct root login
+- Allow SSH access only for a specific user
+- Ensure access works reliably from Windows
 
 ---
 
 ## 🏗️ Environment
 
 ### Host Machine
-- OS: Windows 10 / 11
-- Tool: Windows Terminal (PowerShell)
+- Windows 10
+- PowerShell
+- OpenSSH Client
 
 ### Server
-- OS: Ubuntu Linux
-- Hypervisor: VirtualBox
-- Network Mode: Host-only Adapter
-- SSH Server: OpenSSH
-- VM IP: `192.168.56.101`
+- Ubuntu (VirtualBox VM)
+- OpenSSH Server
+- systemd
+
+### Networking
+- VirtualBox Host-Only Adapter
+- Server IP: `192.168.56.101`
 
 ---
 
