@@ -40,20 +40,108 @@ The project simulates a real SysOps hardening task commonly required in producti
 
 ---
 
-## 🔐 Why This Matters
-In real production environments:
-- Password SSH is disabled
-- Access is authenticated using cryptographic keys
-- Root login is blocked
-- SSH exposure is minimized
+## ⚠️ Problem Encountered
+After correctly configuring SSH to use port 2222, the server continued listening on port 22, even after restarting the SSH service.
 
-This project mirrors standard security baselines required in cloud and on-prem Linux systems.
+```sudo ss -tulpn | grep ssh```
+
+Output:
+
+```LISTEN 0 4096 0.0.0.0:22```
+
+Despite:
+- Valid configuration
+- Successful `sshd -T` validation
+- Multiple restarts
 
 ---
 
-## 🧪 Implementation Steps
+## 🔍 Root Cause Analysis
+Modern Ubuntu versions (22.04+) use systemd socket activation for SSH:
+- `ssh.socket` pre-binds port `22`
+- `sshd_config` port settings are ignored while socket activation is enabled
+- SSH inherits the socket from systemd instead of opening its own port
 
-### 1️⃣ Generate SSH Key Pair (Windows)
+Verification command:
 
-```powershell
-ssh-keygen -t ed25519 -C "sysops-lab"
+```sudo sshd -T | grep port```
+
+Output:
+
+```port 2222```
+
+This confirmed the configuration was correct, but not applied at runtime.
+
+---
+
+## 🛠️ Solution
+
+### 1️⃣ Create a Hardening Override File
+Instead of modifying default configs, a custom override file was created:
+
+```sudo nano /etc/ssh/sshd_config.d/99-hardening.conf```
+
+```Port 2222```
+
+```PermitRootLogin no```
+
+```AllowUsers richard```
+
+### 2️⃣ Disable systemd SSH Socket Activation
+
+```sudo systemctl stop ssh.socket```
+
+```sudo systemctl disable ssh.socket```
+
+This allows `sshd` to control its own listening port.
+
+### 3️⃣ Restart SSH Daemon
+
+```sudo systemctl restart ssh```
+
+### 4️⃣ Verify Active Listening Port
+
+```sudo ss -tulpn | grep ssh```
+
+Expected output:
+
+```LISTEN 0 4096 0.0.0.0:2222```
+
+### ✅ Verification Tests
+Local Test (Ubuntu)
+
+```ssh -p 2222 richard@localhost```
+
+Remote Test (Windows PowerShell)
+
+```ssh -p 2222 richard@192.168.56.101```
+
+Both tests succeeded.
+
+---
+
+## 🔐 Security Improvements Implemented
+- SSH moved off default port (22 → 2222)
+- Root login disabled
+- SSH access restricted to a single user
+- systemd socket activation understood and safely disabled
+- Configuration validated before restart to avoid lockout
+
+## 🧠 Key Learnings
+- SSH configuration files are not shell commands
+- sshd -T shows effective configuration, not runtime state
+- systemd socket activation can override daemon configs
+- Proper validation prevents production lockouts
+- Always test locally before disconnecting remote sessions
+
+## 🏷️ Skills Demonstrated
+- Linux server administration
+- SSH hardening best practices
+- systemd troubleshooting
+- Secure remote access
+- Windows ↔ Linux interoperability
+- Incident-style debugging
+
+## 📂 Project Status
+### ✅ Completed
+### 🛡️ Production-safe hardening applied
